@@ -1,7 +1,65 @@
-# 万能鸭录音机架
+<p align="center">
+  <img src="ui/logo.png" width="112" alt="wannengya audio">
+</p>
 
-把指定 App 的声音低延迟送进 DAW，经过 VST3 处理后，再把宿主混音送回去，
-作为 OBS / 抖音直播伴侣 / 微信可选的“麦克风”。
+<h1 align="center">wannengya audio</h1>
+
+<p align="center">
+  把指定 App 的声音低延迟送进 DAW，经过 VST3 处理后，再把宿主混音送回去，<br>
+  作为 OBS / 抖音直播伴侣 / 微信可选的「麦克风」。
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-2f6f4e" alt="AGPL-3.0"></a>
+  <img src="https://img.shields.io/badge/macOS-12%2B-555" alt="macOS 12+">
+  <img src="https://img.shields.io/badge/universal%20binary-arm64%20%7C%20x86__64-555" alt="universal binary">
+</p>
+
+## 怎么用
+
+四步。第 1 步装一次就好，后面三步都在 DAW 和推流软件里完成。
+
+**1. 装驱动和后台服务**
+
+用安装包，或者从源码装：
+
+```sh
+sh scripts/install_driver.sh   # 需要管理员密码，会重启 coreaudiod
+sh scripts/install_agent.sh
+```
+
+装完 Audio MIDI Setup 里会多出四个**双向**设备，`wannengya 1/2` 到 `7/8`。
+
+**2. 在 DAW 里插 Capture**
+
+插在一条立体声 Bus 或总线轨上。左边选 **App**，直接读该 App 的声音，不用改它的输出设备；
+或者改选**虚拟通道**，外部播放器把输出设成同一个 `wannengya X`。两路可以同时开，
+插件内部相加，不做限幅（全程 float32）。
+
+<p align="center">
+  <img src="docs/images/capture.png" width="560" alt="Capture 插件界面">
+</p>
+
+<p align="center"><sub>Capture：选要采集的 App 或虚拟通道；顶部显示后台服务与权限状态，缺权限会直接给出设置路径。</sub></p>
+
+**3. 在 Main 输出插 Return**
+
+选 `wannengya 1/2`，宿主混音就从这对设备送出去。采集通道和回传通道不要选同一对，
+插件会检测并拒绝。
+
+<p align="center">
+  <img src="docs/images/return.png" width="560" alt="Return 插件界面">
+</p>
+
+<p align="center"><sub>Return：选回传通道，界面底部直接提示 OBS 的麦克风该选哪个设备。</sub></p>
+
+**4. OBS 麦克风选 `wannengya 1/2`**
+
+抖音直播伴侣、微信视频号同理，把麦克风或输入设备选成同一个虚拟设备。
+
+整条链路约 8～11 ms，具体数字见下文「延迟」。
+
+## 工作原理
 
 ```
 伴奏 App ──process tap──▶ 万能鸭 Agent ──共享内存──▶ Capture VST3
@@ -11,32 +69,8 @@
                          Return VST3 ──▶ Agent ──▶ wannengya 1/2 ──▶ OBS
 ```
 
-## 这一版和上一版的区别
-
-| | 上一版 | 这一版 |
-|---|---|---|
-| 虚拟声卡 | 8 个 bundle，一方向一个 | **1 个 bundle，4 个双向设备** |
-| out→in 环回 | 每个方向一层 2048 帧缓冲，实测 44.7 ms | 按 sample time 寻址，**1～2 个 IO 周期** |
-| 时钟漂移 | 无补偿，靠跳读指针，长跑周期性断音 | **每条链路一个 64-tap 窗函数 sinc 重采样器 + PI 控制** |
-| App 进 DAW | 绕两趟虚拟设备，约 130 ms | **直连插件，约 10～15 ms** |
-| Return 到 OBS | 约 97 ms | **约 10～15 ms** |
-| 跨进程缓冲 | `/tmp` 文件，权限 0666 | **`shm_open` 0600，按 UID 命名** |
-| 延迟上报 | 插件 0，驱动 1536 | 实测值 |
-| 采样率 | 必须全链路同率 | App / 工程不同率自动重采样 |
-| 后台存活 | 编辑器轮询拉起 | 心跳 + coreaudiod 重启监听 |
-| 界面 | 文字说明堆叠 | 一行一个决定 |
-
-## 目录
-
-```
-shared/   共享内存环形缓冲、漂移补偿、sinc 重采样、控制块
-driver/   HAL 驱动：一个 bundle，四个双向设备
-hub/      进程枚举、process tap、虚拟设备读写
-agent/    后台服务：持有 TCC、跑 tap、播回传
-plugins/  Capture / Return 两个 VST3
-ui/       视觉规范、LookAndFeel、Logo
-tools/    wngmon 诊断工具、界面离屏渲染
-```
+驱动只做环回，不做 DSP；跨进程的每一段用 64-tap 窗函数 sinc 插值器加 PI 控制稳住
+缓冲水位，所以 DAW 的时钟和虚拟设备的时钟不需要一致，采样率不同也能走同一条链路。
 
 ## 系统要求
 
@@ -92,19 +126,6 @@ sh scripts/install_agent.sh
 
 纯虚拟通道路径不需要任何系统权限。只有“在插件里直接选 App”才需要
 「屏幕与系统音频录制」，由 Agent 在首次使用时弹出。
-
-## 使用
-
-**Capture**：插在一条立体声 Bus 或总线轨上。
-
-- 选 **App**：直接读取该 App 的声音（不需要把播放器输出改到虚拟设备）。
-- 选 **虚拟通道**：读取任意一个 `wannengya X` 设备，外部播放器把输出设成同一个。
-- 两者可以同时开，插件把两路相加，不做限幅（全程 float32）。
-
-**Return**：插在 Studio One 的 Main 输出或 Stream 总线。
-
-- 选 `wannengya 1/2` 后，OBS 麦克风选 `wannengya 1/2`。
-- 回传通道和采集通道不要选同一对，插件会检测并拒绝。
 
 ## 延迟
 
