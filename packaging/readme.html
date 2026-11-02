@@ -1,0 +1,33 @@
+<html><head><meta charset="utf-8"><style>
+body { font-family: -apple-system, "PingFang SC", sans-serif; font-size: 13px; color: #1d1d1f; }
+h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+p, li { line-height: 1.55; }
+</style></head><body>
+<h3>安装内容</h3>
+<ul>
+  <li><code>/Library/Audio/Plug-Ins/HAL/Wannengya.driver</code> — 四个双向虚拟设备</li>
+  <li><code>/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3</code> — 采集</li>
+  <li><code>/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3</code> — 回传</li>
+  <li><code>/Applications/wannengya Agent.app</code> — 后台服务</li>
+</ul>
+
+<h3>装完之后</h3>
+<ol>
+  <li>系统设置 → 声音，应能看到 <b>wannengya 1/2 … 7/8</b>。</li>
+  <li>如果看不到，打开终端执行：
+      <code>sh scripts/doctor.sh</code>（安装目录下），它会指出是哪一步没生效。</li>
+  <li>在 Studio One 里插上 <b>万能鸭录音机架 Capture</b>，第一次选择 App 时会请求
+      「屏幕与系统音频录制」权限（仅 macOS 14.2+；更早的系统上应用下拉框是灰的，
+      请改用虚拟通道）。</li>
+</ol>
+
+<h3>卸载</h3>
+<p>删除上面四个路径，然后重启音频服务即可。或运行安装目录下的
+<code>sudo sh scripts/uninstall.sh</code>。</p>
+
+<h3>许可与源码</h3>
+<p>本程序以 <b>AGPL-3.0</b> 发布：完整源码、构建脚本和第三方许可声明都在
+<a href="https://github.com/shangcheng8/wannengya-audio">github.com/shangcheng8/wannengya-audio</a>。</p>
+<p>程序不发起任何网络连接，也不收集遥测；卸载时系统权限记录会一并清除。
+VST is a trademark of Steinberg Media Technologies GmbH。</p>
+</body></html>

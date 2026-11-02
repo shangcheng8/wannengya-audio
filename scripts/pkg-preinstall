@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+
+# Remove the previous generation's per-direction bundles and stale per-user
+# copies so no duplicate wannengya plug-in can shadow the new one.
+
+for name in WannengyaIn12 WannengyaIn34 WannengyaIn56 WannengyaIn78 \
+            WannengyaOut12 WannengyaOut34 WannengyaOut56 WannengyaOut78 \
+            Wannengya; do
+    rm -rf "/Library/Audio/Plug-Ins/HAL/$name.driver"
+done
+
+rm -rf "/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3"
+rm -rf "/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
+rm -rf "/Applications/wannengya Agent.app"
+
+for home in /Users/*; do
+    [ -d "$home" ] || continue
+    rm -rf "$home/Applications/wannengya Agent.app"
+    rm -rf "$home/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3"
+    rm -rf "$home/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
+done
+
+# Known names are not enough: an experiment build installed under another
+# name still claims the same CFPlugIn factory UUID, and two bundles with one
+# UUID make every audio client on the machine fail its plug-in lookup while
+# coreaudiod rebuilds the list. Removing by UUID catches those.
+FACTORY_UUID="E60A2918-B0D2-4B3D-9CD4-1697DE168E9E"
+
+remove_duplicates()
+{
+    for bundle in "$1"/*.driver; do
+        [ -d "$bundle" ] || continue
+        if /usr/bin/plutil -p "$bundle/Contents/Info.plist" 2>/dev/null | /usr/bin/grep -q "$FACTORY_UUID"; then
+            rm -rf "$bundle"
+        fi
+    done
+}
+
+remove_duplicates /Library/Audio/Plug-Ins/HAL
+
+for home in /Users/*; do
+    [ -d "$home" ] || continue
+    remove_duplicates "$home/Library/Audio/Plug-Ins/HAL"
+done
+
+/usr/bin/pkill -f 'wannengya Agent.app/Contents/MacOS/wannengya Agent' 2>/dev/null || true
+
+exit 0

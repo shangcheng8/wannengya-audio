@@ -1,0 +1,28 @@
+# Build output
+/build/
+/build-release/
+/dist/
+*.dmg
+*.pkg
+*.app/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.o
+*.a
+*.dSYM/
+
+# Vendored toolchains and dependencies (JUCE is fetched by CMake, not tracked)
+/third_party/JUCE
+/third_party/cmake-*
+
+# macOS noise
+.DS_Store
+._*
+*.swp
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/

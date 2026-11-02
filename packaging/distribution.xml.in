@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>万能鸭录音机架 @VERSION@</title>
+    <organization>com.wannengya</organization>
+    <domains enable_localSystem="true"/>
+    <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
+    <!-- Below this the process taps the product relies on cannot exist. -->
+    <allowed-os-versions>
+        <os-version min="12.0"/>
+    </allowed-os-versions>
+    <background file="logo.png" alignment="topright" scaling="none"/>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <readme file="readme.html" mime-type="text/html"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="com.wannengya.installer"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="com.wannengya.installer" visible="false">
+        <pkg-ref id="com.wannengya.installer"/>
+    </choice>
+    <pkg-ref id="com.wannengya.installer" version="@VERSION@" onConclusion="none">wannengya-component.pkg</pkg-ref>
+</installer-gui-script>

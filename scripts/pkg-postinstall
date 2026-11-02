@@ -1,0 +1,48 @@
+#!/bin/sh
+set -eu
+
+DRIVER="/Library/Audio/Plug-Ins/HAL/Wannengya.driver"
+
+# coreaudiod only loads HAL plug-ins owned by root:wheel. Package payloads are
+# normally installed that way already, but a previous manual `cp` can leave the
+# directory owned by the user, so enforce it.
+if [ -d "$DRIVER" ]; then
+    /usr/sbin/chown -R root:wheel "$DRIVER"
+    /bin/chmod -R go-w "$DRIVER"
+    /usr/bin/xattr -cr "$DRIVER" 2>/dev/null || true
+fi
+
+/bin/launchctl kickstart -k system/com.apple.audio.coreaudiod 2>/dev/null \
+    || /usr/bin/killall coreaudiod 2>/dev/null || true
+
+# Ask for the two TCC permissions as the logged-in user. Running the agent as
+# root would record the grant against the wrong identity.
+LOG=/var/log/wannengya-install.log
+log() { echo "$(/bin/date '+%Y-%m-%d %H:%M:%S') $*" >>"$LOG" 2>/dev/null || true; }
+
+sleep 2
+
+APP="/Applications/wannengya Agent.app"
+CONSOLE_USER="$(/usr/bin/stat -f %Su /dev/console 2>/dev/null || true)"
+
+if [ -z "$CONSOLE_USER" ] || [ "$CONSOLE_USER" = "root" ]; then
+    log "no graphical console user; skipping the permission prompt"
+    exit 0
+fi
+
+CONSOLE_UID="$(/usr/bin/id -u "$CONSOLE_USER" 2>/dev/null || true)"
+[ -n "$CONSOLE_UID" ] || exit 0
+
+if [ ! -d "$APP" ]; then
+    log "missing $APP"
+    exit 0
+fi
+
+/usr/bin/pkill -f "$APP/Contents/MacOS/wannengya Agent" 2>/dev/null || true
+sleep 1
+
+/bin/launchctl asuser "$CONSOLE_UID" \
+    /usr/bin/open -n -a "$APP" --args --request-permissions \
+    || log "could not launch the agent"
+
+exit 0
