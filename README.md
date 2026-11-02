@@ -16,6 +16,14 @@
   <img src="https://img.shields.io/badge/universal%20binary-arm64%20%7C%20x86__64-555" alt="universal binary">
 </p>
 
+<p align="center">
+  <a href="https://www.bilibili.com/video/BV1BT4M69Evq">
+    <img src="docs/images/video-cover.jpg" width="600" alt="演示视频：mac 电脑机架跳线再也不愁了">
+  </a>
+</p>
+
+<p align="center"><sub>▶ 演示视频：<a href="https://www.bilibili.com/video/BV1BT4M69Evq">mac 电脑机架跳线再也不愁了</a>（B 站）</sub></p>
+
 ## 怎么用
 
 四步。第 1 步装一次就好，后面三步都在 DAW 和推流软件里完成。
