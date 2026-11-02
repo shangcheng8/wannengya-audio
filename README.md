@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-2f6f4e" alt="AGPL-3.0"></a>
+  <a href="https://github.com/shangcheng8/wannengya-audio/releases/latest"><img src="https://img.shields.io/github/v/release/shangcheng8/wannengya-audio?label=download&color=2f6f4e" alt="latest release"></a>
   <img src="https://img.shields.io/badge/macOS-12%2B-555" alt="macOS 12+">
   <img src="https://img.shields.io/badge/universal%20binary-arm64%20%7C%20x86__64-555" alt="universal binary">
 </p>
@@ -21,7 +22,13 @@
 
 **1. 装驱动和后台服务**
 
-用安装包，或者从源码装：
+最快是直接下安装包：到 [Releases](https://github.com/shangcheng8/wannengya-audio/releases/latest)
+下载 `.pkg` 双击安装，或者用 `.dmg`。安装过程要输入管理员密码。
+
+> 安装包是本机自签名、没有公证的，macOS 会提示「无法验证开发者」。
+> 右键 → 打开，或到「系统设置 → 隐私与安全性」点「仍要打开」即可，不是文件损坏。
+
+想从源码装也行：
 
 ```sh
 sh scripts/install_driver.sh   # 需要管理员密码，会重启 coreaudiod

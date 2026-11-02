@@ -90,6 +90,19 @@ mkdir -p "$STAGE/Applications" \
 /usr/bin/ditto "$CAPTURE" "$STAGE/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3"
 /usr/bin/ditto "$RETURN" "$STAGE/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
 
+# AGPL-3.0 requires the licence to travel with the binaries, and the third-party
+# notices are required by the MIT / zlib / BSD components we link. They go into
+# the app bundle before signing, so they are sealed by the signature.
+STAGED_APP="$STAGE/Applications/wannengya Agent.app"
+mkdir -p "$STAGED_APP/Contents/Resources"
+for doc in LICENSE THIRD-PARTY-NOTICES.md; do
+    if [ ! -f "$doc" ]; then
+        echo "Missing $doc; refusing to build a package without it." >&2
+        exit 1
+    fi
+    /usr/bin/ditto "$doc" "$STAGED_APP/Contents/Resources/$doc"
+done
+
 find "$STAGE" -name '._*' -delete
 find "$STAGE" -name '.DS_Store' -delete
 
@@ -167,6 +180,10 @@ if [ "$MAKE_DMG" = "1" ]; then
     mkdir -p "$DMG_ROOT"
     /usr/bin/ditto "$PKG" "$DMG_ROOT/$(basename "$PKG")"
     ln -s /Applications "$DMG_ROOT/Applications"
+    # Same two files next to the installer, so they are readable without
+    # mounting anything first.
+    /usr/bin/ditto LICENSE "$DMG_ROOT/LICENSE.txt"
+    /usr/bin/ditto THIRD-PARTY-NOTICES.md "$DMG_ROOT/THIRD-PARTY-NOTICES.md"
 
     /usr/bin/hdiutil create -volname "万能鸭录音机架" -srcfolder "$DMG_ROOT" \
         -ov -format UDZO "$DMG"
