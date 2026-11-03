@@ -21,6 +21,19 @@ for home in /Users/*; do
     rm -rf "$home/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
 done
 
+# Audio Units are installed system-wide into /Library/Audio/Plug-Ins/Components,
+# but an older build (or a manual copy) may have left per-user ones in
+# ~/Library/Audio/Plug-Ins/Components. A per-user bundle with the same
+# AudioComponents entry shadows the system one in some hosts, so drop both. The
+# payload's own system copies are removed and rewritten by the upgrade anyway.
+for au in "wannengya Capture" "wannengya Return"; do
+    rm -rf "/Library/Audio/Plug-Ins/Components/$au.component"
+    for home in /Users/*; do
+        [ -d "$home" ] || continue
+        rm -rf "$home/Library/Audio/Plug-Ins/Components/$au.component"
+    done
+done
+
 # Known names are not enough: an experiment build installed under another
 # name still claims the same CFPlugIn factory UUID, and two bundles with one
 # UUID make every audio client on the machine fail its plug-in lookup while

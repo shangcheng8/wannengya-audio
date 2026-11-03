@@ -3,7 +3,7 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-VERSION="${VERSION:-1.0.6}"
+VERSION="${VERSION:-1.0.7}"
 BUILD_DIR="${BUILD_DIR:-build-release}"
 CMAKE="${CMAKE:-third_party/cmake-3.31.6-macos-universal/CMake.app/Contents/bin/cmake}"
 JOBS="${JOBS:-$(sysctl -n hw.ncpu)}"
@@ -56,9 +56,11 @@ CODESIGN_IDENTITY="$APP_IDENTITY" sh scripts/build_driver.sh
 AGENT="$BUILD_DIR/agent/wannengya Agent.app"
 CAPTURE="$BUILD_DIR/WannengyaCapture_artefacts/Release/VST3/wannengya Capture.vst3"
 RETURN="$BUILD_DIR/WannengyaReturn_artefacts/Release/VST3/wannengya Return.vst3"
+CAPTURE_AU="$BUILD_DIR/WannengyaCapture_artefacts/Release/AU/wannengya Capture.component"
+RETURN_AU="$BUILD_DIR/WannengyaReturn_artefacts/Release/AU/wannengya Return.component"
 DRIVER="$PWD/build/drivers/Wannengya.driver"
 
-for artifact in "$AGENT" "$CAPTURE" "$RETURN" "$DRIVER"; do
+for artifact in "$AGENT" "$CAPTURE" "$RETURN" "$CAPTURE_AU" "$RETURN_AU" "$DRIVER"; do
     if [ ! -e "$artifact" ]; then
         echo "Missing build artifact: $artifact" >&2
         exit 1
@@ -83,12 +85,17 @@ sign() {
 echo "==> Staging"
 mkdir -p "$STAGE/Applications" \
          "$STAGE/Library/Audio/Plug-Ins/HAL" \
-         "$STAGE/Library/Audio/Plug-Ins/VST3"
+         "$STAGE/Library/Audio/Plug-Ins/VST3" \
+         "$STAGE/Library/Audio/Plug-Ins/Components"
 
 /usr/bin/ditto "$DRIVER" "$STAGE/Library/Audio/Plug-Ins/HAL/Wannengya.driver"
 /usr/bin/ditto "$AGENT" "$STAGE/Applications/wannengya Agent.app"
 /usr/bin/ditto "$CAPTURE" "$STAGE/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3"
 /usr/bin/ditto "$RETURN" "$STAGE/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
+# Logic Pro / GarageBand only see Audio Units, so the .component bundles are
+# what makes the product usable there at all.
+/usr/bin/ditto "$CAPTURE_AU" "$STAGE/Library/Audio/Plug-Ins/Components/wannengya Capture.component"
+/usr/bin/ditto "$RETURN_AU" "$STAGE/Library/Audio/Plug-Ins/Components/wannengya Return.component"
 
 # AGPL-3.0 requires the licence to travel with the binaries, and the third-party
 # notices are required by the MIT / zlib / BSD components we link. They go into
@@ -110,6 +117,8 @@ for bundle in \
     "$STAGE/Applications/wannengya Agent.app" \
     "$STAGE/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3" \
     "$STAGE/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3" \
+    "$STAGE/Library/Audio/Plug-Ins/Components/wannengya Capture.component" \
+    "$STAGE/Library/Audio/Plug-Ins/Components/wannengya Return.component" \
     "$STAGE/Library/Audio/Plug-Ins/HAL/Wannengya.driver"
 do
     sign "$bundle"

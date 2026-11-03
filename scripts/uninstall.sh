@@ -16,6 +16,8 @@ done
 echo "Removing plug-ins and agent"
 rm -rf "/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3"
 rm -rf "/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
+rm -rf "/Library/Audio/Plug-Ins/Components/wannengya Capture.component"
+rm -rf "/Library/Audio/Plug-Ins/Components/wannengya Return.component"
 rm -rf "/Applications/wannengya Agent.app"
 
 for home in /Users/*; do
@@ -23,6 +25,8 @@ for home in /Users/*; do
     rm -rf "$home/Applications/wannengya Agent.app"
     rm -rf "$home/Library/Audio/Plug-Ins/VST3/wannengya Capture.vst3"
     rm -rf "$home/Library/Audio/Plug-Ins/VST3/wannengya Return.vst3"
+    rm -rf "$home/Library/Audio/Plug-Ins/Components/wannengya Capture.component"
+    rm -rf "$home/Library/Audio/Plug-Ins/Components/wannengya Return.component"
 done
 
 echo "Removing per-user shared memory"

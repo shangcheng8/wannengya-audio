@@ -36,6 +36,8 @@ echo
 echo "built:"
 echo "  $BUILD/agent/wannengya Agent.app"
 echo "  $BUILD/WannengyaCapture_artefacts/$CONFIG/VST3/wannengya Capture.vst3"
+echo "  $BUILD/WannengyaCapture_artefacts/$CONFIG/AU/wannengya Capture.component"
 echo "  $BUILD/WannengyaReturn_artefacts/$CONFIG/VST3/wannengya Return.vst3"
+echo "  $BUILD/WannengyaReturn_artefacts/$CONFIG/AU/wannengya Return.component"
 echo "  $BUILD/drivers/Wannengya.driver"
 echo "  $BUILD/wngmon"

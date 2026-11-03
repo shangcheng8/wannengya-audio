@@ -15,6 +15,12 @@ fi
 /bin/launchctl kickstart -k system/com.apple.audio.coreaudiod 2>/dev/null \
     || /usr/bin/killall coreaudiod 2>/dev/null || true
 
+# AudioComponentRegistrar caches the AudioComponents entries it found when it
+# started. Without a restart, a host that is already running (or a Logic launch
+# right after the install) can scan a stale list and report the AU as missing
+# until the machine reboots.
+/usr/bin/killall -9 AudioComponentRegistrar 2>/dev/null || true
+
 # Ask for the two TCC permissions as the logged-in user. Running the agent as
 # root would record the grant against the wrong identity.
 LOG=/var/log/wannengya-install.log

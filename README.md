@@ -117,11 +117,24 @@ JUCE 固定为 8.0.15：配置时如果 `third_party/JUCE` 不存在，CMake 会
 
 - `build/agent/wannengya Agent.app`
 - `build/WannengyaCapture_artefacts/Release/VST3/wannengya Capture.vst3`
+- `build/WannengyaCapture_artefacts/Release/AU/wannengya Capture.component`
 - `build/WannengyaReturn_artefacts/Release/VST3/wannengya Return.vst3`
+- `build/WannengyaReturn_artefacts/Release/AU/wannengya Return.component`
 - `build/drivers/Wannengya.driver`
 - `build/wngmon`
 
-两个 VST3 会自动复制到 `~/Library/Audio/Plug-Ins/VST3/`。
+构建同时产出 VST3 和 AU：VST3 给 Cubase / Nuendo / Studio One / Reaper / Bitwig，
+AU 给 Logic Pro / GarageBand / MainStage（这几个根本不加载 VST）。VST3 会自动复制到
+`~/Library/Audio/Plug-Ins/VST3/`，`.component` 会复制到
+`~/Library/Audio/Plug-Ins/Components/`。
+
+装好后校验 AU（改了 code 或换了机器都先跑这一步）：
+
+```sh
+killall -9 AudioComponentRegistrar 2>/dev/null
+auval -v aufx Cap1 Wngy    # wannengya Capture
+auval -v aufx Ret1 Wngy    # wannengya Return
+```
 
 ## 安装
 

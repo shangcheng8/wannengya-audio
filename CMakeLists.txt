@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(WannengyaAudio VERSION 1.0.6 LANGUAGES C CXX OBJC OBJCXX)
+project(WannengyaAudio VERSION 1.0.7 LANGUAGES C CXX OBJC OBJCXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -89,13 +89,16 @@ set_target_properties(WannengyaAgent PROPERTIES
     OUTPUT_NAME "wannengya Agent"
     MACOSX_BUNDLE_BUNDLE_NAME "万能鸭录音机架"
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.wannengya.agent"
-    MACOSX_BUNDLE_BUNDLE_VERSION "1.0.6"
-    MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.6"
+    MACOSX_BUNDLE_BUNDLE_VERSION "1.0.7"
+    MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.7"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/agent"
 )
 
 # -----------------------------------------------------------------------------
-# VST3 plug-ins.
+# Plug-ins. VST3 serves Cubase / Nuendo / Studio One / Reaper / Bitwig; AU (v2)
+# serves Logic Pro / GarageBand / MainStage, which have no VST support at all.
+# Both wrappers are built from the same sources and share the manufacturer and
+# product codes, so one plug-in keeps one identity across formats.
 # -----------------------------------------------------------------------------
 set(WNG_PLUGIN_COMMON
     plugins/AgentLauncher.mm
@@ -118,7 +121,7 @@ juce_add_plugin(WannengyaCapture
     BUNDLE_ID "com.wannengya.capture"
     PLUGIN_MANUFACTURER_CODE Wngy
     PLUGIN_CODE Cap1
-    FORMATS VST3
+    FORMATS VST3 AU
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
@@ -152,7 +155,7 @@ juce_add_plugin(WannengyaReturn
     BUNDLE_ID "com.wannengya.return"
     PLUGIN_MANUFACTURER_CODE Wngy
     PLUGIN_CODE Ret1
-    FORMATS VST3
+    FORMATS VST3 AU
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
@@ -207,7 +210,7 @@ juce_add_gui_app(WannengyaPreview
     PRODUCT_NAME "wannengya Preview"
     COMPANY_NAME "wannengya"
     BUNDLE_ID "com.wannengya.preview"
-    VERSION "1.0.6"
+    VERSION "1.0.7"
 )
 
 juce_generate_juce_header(WannengyaPreview)
