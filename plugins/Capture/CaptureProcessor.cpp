@@ -250,19 +250,26 @@ juce::AudioProcessorEditor* CaptureProcessor::createEditor()
 
 void CaptureProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    juce::ValueTree state("WannengyaCapture");
+    // Deliberately avoid juce::ValueTree/var here. A ValueTree created inside
+    // this plug-in used to abort in its destructor while the host was asking
+    // for state during instantiation (the VST3 wrapper calls getState() right
+    // after createInstance). Keep the state as plain little-endian primitives:
+    // no ref-counted var, no cross-module juce::String destruction.
+    constexpr juce::int32 stateMagic = 0x574E4743;   // 'WNGC'
+    constexpr juce::int16 stateVersion = 2;
+
+    juce::MemoryOutputStream stream (destData, false);
+    stream.writeInt (stateMagic);
+    stream.writeShort (stateVersion);
 
     {
-        const juce::ScopedLock lock(stateLock);
-        state.setProperty("bundleID", savedBundleID, nullptr);
-        state.setProperty("name", savedName, nullptr);
-        state.setProperty("pid", static_cast<int>(savedPID), nullptr);
-        state.setProperty("pair", savedPair, nullptr);
-        state.setProperty("usePair", savedUsePair, nullptr);
+        const juce::ScopedLock lock (stateLock);
+        stream.writeString (savedBundleID);
+        stream.writeString (savedName);
+        stream.writeInt (savedPID);
+        stream.writeInt (savedPair);
+        stream.writeBool (savedUsePair);
     }
-
-    juce::MemoryOutputStream stream(destData, true);
-    state.writeToStream(stream);
 }
 
 void CaptureProcessor::setStateInformation(const void* data, int sizeInBytes)
@@ -270,18 +277,34 @@ void CaptureProcessor::setStateInformation(const void* data, int sizeInBytes)
     if (data == nullptr || sizeInBytes <= 0)
         return;
 
-    const auto state = juce::ValueTree::readFromData(data, static_cast<size_t>(sizeInBytes));
+    juce::MemoryInputStream stream (data, static_cast<size_t> (sizeInBytes), false);
 
-    if (! state.isValid() || ! state.hasType("WannengyaCapture"))
+    // Version 1 states were ValueTree blobs written by older builds. There is
+    // no safe way to parse those through var without risking the same abort,
+    // so ignore them and start with the default selection instead.
+    if (stream.readInt() != 0x574E4743)
         return;
 
-    const juce::ScopedLock lock(stateLock);
-    savedBundleID = state.getProperty("bundleID").toString();
-    savedName = state.getProperty("name").toString();
-    savedPID = static_cast<int32_t>(static_cast<int>(state.getProperty("pid", -1)));
-    savedPair = static_cast<int>(state.getProperty("pair", wng::kDefaultCapturePair));
-    savedUsePair = static_cast<bool>(state.getProperty("usePair", true));
+    const auto version = stream.readShort();
 
+    if (version < 2 || version > 2)
+        return;
+
+    const auto bundleID = stream.readString();
+    const auto name = stream.readString();
+    const auto pid = stream.readInt();
+    const auto pair = stream.readInt();
+    const auto usePair = stream.readBool();
+
+    if (stream.getNumBytesRemaining() < 0)
+        return;
+
+    const juce::ScopedLock lock (stateLock);
+    savedBundleID = bundleID;
+    savedName = name;
+    savedPID = pid;
+    savedPair = juce::jlimit (0, wng::kDevicePairs - 1, pair);
+    savedUsePair = usePair;
     restorePending = true;
     lastRestoreMs = 0;
 }
